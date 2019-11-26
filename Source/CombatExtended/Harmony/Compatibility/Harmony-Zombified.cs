@@ -14,7 +14,7 @@ namespace CombatExtended.Harmony.Compatibility
     class Harmony_Compat_Zombiefied
     {
         static readonly string logPrefix = Assembly.GetExecutingAssembly().GetName().Name + " :: ";
-        static Assembly ass = AppDomain.CurrentDomain.GetAssemblies().
+        static readonly Assembly ass = AppDomain.CurrentDomain.GetAssemblies().
                                 SingleOrDefault(assembly => assembly.
                                 GetName().Name == "Zombiefied");
 
@@ -23,7 +23,7 @@ namespace CombatExtended.Harmony.Compatibility
             return layer.GetModExtension<ApparelLayerExtension>()?.IsHeadwear ?? false;
         }
 
-        static bool Prepare()
+        internal static bool Prepare()
         {
             if (ass?.FullName.Contains("Zombiefied") ?? false)
             {
@@ -32,7 +32,7 @@ namespace CombatExtended.Harmony.Compatibility
             return false;
         }
 
-        static IEnumerable<MethodBase> TargetMethods()
+        internal static IEnumerable<MethodBase> TargetMethods()
         {
             var found = false;
             foreach (var t in ass.GetTypes())
