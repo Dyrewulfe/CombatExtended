@@ -78,7 +78,7 @@ namespace CombatExtended
                     compApparel = this,
                     action = action,
                     defaultLabel = Apparel.def.LabelCap,
-                    defaultDesc = "TO-DO",
+                    defaultDesc = "TODO:ActiveApparel",
                     icon = Apparel.def.IconTexture(),
                     tutorTag = tag
                 };
