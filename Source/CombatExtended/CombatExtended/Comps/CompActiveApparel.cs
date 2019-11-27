@@ -43,13 +43,22 @@ namespace CombatExtended
                 return Apparel?.Wearer;
             }
         }
+
+        public bool ShouldThrowMote => Props.throwMote;
         #endregion
 
         #region Methods
 
-        void ToggleApparel()
+        public void ToggleApparel()
         {
-            active = !active;
+            active = !active;    
+        }
+
+        public void TryToggleApparel()
+        {
+            Job toggleJob = new Job(CE_JobDefOf.ToggleActiveApparel, Wearer, parent);
+            toggleJob.playerForced = true;
+            Wearer.jobs.StartJob(toggleJob, JobCondition.InterruptForced, null, Wearer.CurJob?.def != toggleJob.def, true);
         }
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
@@ -58,7 +67,7 @@ namespace CombatExtended
             if (Wearer != null && Wearer.Faction == Faction.OfPlayer)
             {
                 Action action = null;
-                if (Wearer != null) action = ToggleApparel;
+                if (Wearer != null) action = TryToggleApparel;
 
                 // Check for teaching opportunities
                 string tag = null;

@@ -74,4 +74,15 @@
 		<reportString>FlagC TargetA from TargetB.</reportString>
 	</JobDef>
 
+	<JobDef>
+		<defName>ToggleActiveApparel</defName>
+		<driverClass>CombatExtended.JobDriver_ToggleActiveApparel</driverClass>
+		<reportString>Type TargetB</reportString>
+		<modExtensions>
+			<li Class="CombatExtended.JobDefExtensionCE">
+			  <isCrouchJob>true</isCrouchJob>
+			</li>
+		</modExtensions>
+	</JobDef>
+
 </Defs>
