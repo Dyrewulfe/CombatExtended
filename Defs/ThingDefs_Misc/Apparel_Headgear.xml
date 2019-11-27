@@ -103,6 +103,12 @@
             </defaultOutfitTags>
               <hatRenderedFrontOfFace>false</hatRenderedFrontOfFace>
         </apparel>
+        <comps>
+            <li Class="CombatExtended.CompProperties_ActiveApparel">
+                <defaultActive>false</defaultActive>
+                <activationTime>2.0</activationTime>
+            </li>
+        </comps>
         <modExtensions>
             <li Class="CombatExtended.ApparelHediffExtension">
                 <hediff>WearingGasMask</hediff>

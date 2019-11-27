@@ -110,6 +110,8 @@
     <Compile Include="CombatExtended\AmmoUtility.cs" />
     <Compile Include="CombatExtended\BoundsInjector.cs" />
     <Compile Include="CombatExtended\CollisionVertical.cs" />
+    <Compile Include="CombatExtended\Comps\CompActiveApparel.cs" />
+    <Compile Include="CombatExtended\Comps\CompProperties_ActiveApparel.cs" />
     <Compile Include="CombatExtended\Comps\HediffCompProperties_Beanbag.cs" />
     <Compile Include="CombatExtended\Comps\HediffCompProperties_FleshOnly.cs" />
     <Compile Include="CombatExtended\Comps\HediffCompProperties_Prometheum.cs" />
@@ -118,6 +120,7 @@
     <Compile Include="CombatExtended\Comps\HediffComp_FleshOnly.cs" />
     <Compile Include="CombatExtended\Comps\HediffComp_Prometheum.cs" />
     <Compile Include="CombatExtended\Comps\HediffComp_Venom.cs" />
+    <Compile Include="CombatExtended\Comps_CCL\CompApparelGizmoGiver.cs" />
     <Compile Include="CombatExtended\Controller.cs" />
     <Compile Include="CombatExtended\DamageWorkers\DamageWorker_BluntCE.cs" />
     <Compile Include="CombatExtended\DefOfs\CE_BodyShapeDefOf.cs" />
@@ -151,6 +154,7 @@
     <Compile Include="CombatExtended\Defs\RacePropertiesExtensionCE.cs" />
     <Compile Include="CombatExtended\Enums\LoadoutCountType.cs" />
     <Compile Include="CombatExtended\ExplosionCE.cs" />
+    <Compile Include="CombatExtended\Gizmos\Command_ActivateApparel.cs" />
     <Compile Include="CombatExtended\Jobs\JobDriver_Hunt.cs" />
     <Compile Include="CombatExtended\Jobs\JobDriver_Stabilize.cs" />
     <Compile Include="CombatExtended\Jobs\JobDriver_TakeFromOther.cs" />
