@@ -17,38 +17,41 @@ namespace CombatExtended.Harmony
     {
 
         static readonly string logPrefix = Assembly.GetExecutingAssembly().GetName().Name + " :: " + typeof(Harmony_JobGiver_OptimizeApparel).Name + " :: ";
+        static bool patch_status = true;
+        static bool[] patched = new bool[3];
+        static bool label_set = false;
 
-        internal static IEnumerable<CodeInstruction> Transpiler(ILGenerator gen, IEnumerable<CodeInstruction> instructions, MethodBase origin)
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase origin)
         {
             // For the sake of readable patches
             ConstructorInfo newJob = AccessTools.Constructor(typeof(Verse.AI.Job), new Type[] { typeof(JobDef), typeof(LocalTargetInfo), typeof(LocalTargetInfo) });
 
-            MethodInfo isInAnyStorage = AccessTools.Method(typeof(StoreUtility), nameof(StoreUtility.IsInAnyStorage));
-            MethodInfo thingsInGroup = AccessTools.Method(typeof(ListerThings), nameof(ListerThings.ThingsInGroup));
-            MethodInfo prependInventory = AccessTools.Method(typeof(Harmony_JobGiver_OptimizeApparel), nameof(PrependInventory));
-            MethodInfo inventory_Contains = AccessTools.Method(typeof(Pawn_InventoryTracker), nameof(Pawn_InventoryTracker.Contains));
-            MethodInfo castFromThingImplicit = AccessTools.Method(typeof(LocalTargetInfo), "op_Implicit", new Type[] { typeof(Thing) });
+            MethodInfo isInAnyStorage           = AccessTools.Method(typeof(StoreUtility), nameof(StoreUtility.IsInAnyStorage));
+            MethodInfo thingsInGroup            = AccessTools.Method(typeof(ListerThings), nameof(ListerThings.ThingsInGroup));
+            MethodInfo prependInventory         = AccessTools.Method(typeof(Harmony_JobGiver_OptimizeApparel), nameof(PrependInventory));
+            MethodInfo inventory_Contains       = AccessTools.Method(typeof(Pawn_InventoryTracker), nameof(Pawn_InventoryTracker.Contains));
+            MethodInfo castFromThingImplicit    = AccessTools.Method(typeof(LocalTargetInfo), "op_Implicit", new Type[] { typeof(Thing) });
 
-            FieldInfo jobDefOfWear = AccessTools.Field(typeof(JobDefOf), nameof(JobDefOf.Wear));
-            FieldInfo pawn_Inventory = AccessTools.Field(typeof(Pawn), nameof(Pawn.inventory));
+            FieldInfo jobDefOfWear      = AccessTools.Field(typeof(JobDefOf), nameof(JobDefOf.Wear));
+            FieldInfo pawn_Inventory    = AccessTools.Field(typeof(Pawn), nameof(Pawn.inventory));
             FieldInfo wearFromInventory = AccessTools.Field(typeof(CE_JobDefOf), nameof(CE_JobDefOf.WearFromInventory));
 
             int locApparelIndex = origin.GetMethodBody().LocalVariables.FirstOrDefault(l => l.LocalType == typeof(Apparel)).LocalIndex;
-            int locThingIndex = origin.GetMethodBody().LocalVariables.FirstOrDefault(l => l.LocalType == typeof(Thing)).LocalIndex;
+            int locThingIndex   = origin.GetMethodBody().LocalVariables.FirstOrDefault(l => l.LocalType == typeof(Thing)).LocalIndex;
 
-            List<CodeInstruction>[] patches = new List<CodeInstruction>[3];
-            
+            List<List<CodeInstruction>> patches = new List<List<CodeInstruction>>(3);
+
             /* Target:
              *  List<Thing> list = pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.Apparel);
              * 
              * We're prepending this list with all apparel from the inventory
              * See List<Thing> PrependInventory(List<Thing>, Pawn)
              */
-            patches[0] = new List<CodeInstruction>()
+            patches.Add( new List<CodeInstruction>()
             {
                 new CodeInstruction(OpCodes.Ldarg_1),
                 new CodeInstruction(OpCodes.Call, prependInventory),
-            };
+            });
             
             /* Target:
              *  Apparel apparel = (Apparel)list[j];
@@ -56,7 +59,7 @@ namespace CombatExtended.Harmony
              *	{
              *		if (apparel.IsInAnyStorage())
              */
-            patches[1] = new List<CodeInstruction>()
+            patches.Add( new List<CodeInstruction>()
             {
                 // if (apparel.IsInAnyStorage() || pawn.inventory.Contains(apparel))
                 new CodeInstruction(OpCodes.Ldarg_1),
@@ -64,7 +67,7 @@ namespace CombatExtended.Harmony
                 new CodeInstruction(OpCodes.Ldloc, locApparelIndex),
                 new CodeInstruction(OpCodes.Callvirt, inventory_Contains),
                 new CodeInstruction(OpCodes.Or),
-            };
+            });
 
             /* Target:
              *  if (thing == null)
@@ -88,10 +91,10 @@ namespace CombatExtended.Harmony
              *  
              */
 
-            const int p2_brfalse_index = 4;
             // unless someone else is playing around in here, this will actually be label31 in the transpiler debug output
-            Label label31 = gen.DefineLabel();
-            patches[2] = new List<CodeInstruction>()
+            Label label31 = new Label();
+            const int p2_brfalse_index = 4;
+            patches.Add( new List<CodeInstruction>()
             {
                 // if (pawn.inventory.Contains(thing)
                 new CodeInstruction(OpCodes.Ldarg_1) { labels = new List<Label> { label31 } },
@@ -108,68 +111,94 @@ namespace CombatExtended.Harmony
                 new CodeInstruction(OpCodes.Call, castFromThingImplicit),
                 new CodeInstruction(OpCodes.Newobj, newJob),
                 new CodeInstruction(OpCodes.Ret),
-            };
+            });
 
             CodeInstruction prevCode = new CodeInstruction(OpCodes.Nop);
-            bool[] patched = new bool[3];
-            List<CodeInstruction> patch = new List<CodeInstruction>();
+            List<CodeInstruction> transpiled = new List<CodeInstruction>();
             foreach (var code in instructions)
             {
                 if (!patched[2])
                 {
-                    if (patched[1]
-                        && prevCode.opcode == OpCodes.Ldloc_S
+                    if (patched[1] 
+                        && !label_set
+                        && prevCode.opcode == OpCodes.Ldloc_S && (prevCode.operand as LocalBuilder)?.LocalType == typeof(Thing)
                         && code.opcode == OpCodes.Brtrue)
                     {
-                        code.operand = label31;
+                        label_set = true;
+                        // Creating a new instruction to avoid modifying the original set
+                        transpiled.Add(new CodeInstruction(OpCodes.Brtrue, label31));
+                        continue;
                     }
                     if (code.opcode == OpCodes.Ldsfld && code.operand == jobDefOfWear)
                     {
                         patches[2][p2_brfalse_index].operand = code.labels.FirstOrDefault();
-                        foreach (var p in patches[2])
-                        {
-                            patch.Add(p);
-                        }
+                        transpiled.AddRange(patches[2]);
                         patched[2] = true;
                     }
                 }
 
-                patch.Add(code);
+                transpiled.Add(code);
 
                 if (!patched[0] && code.opcode == OpCodes.Callvirt && code.operand == thingsInGroup)
                 {
-                    foreach (var p in patches[0])
-                    {
-                        patch.Add(p);
-                    }
+                    transpiled.AddRange(patches[0]);
                     patched[0] = true;
                 }
                 if (!patched[1] && code.opcode == OpCodes.Call && code.operand == isInAnyStorage)
                 {
-                    foreach (var p in patches[1])
-                    {
-                        patch.Add(p);
-                    }
+                    transpiled.AddRange(patches[1]);
                     patched[1] = true;
                 }
                 prevCode = code;
             }
 
-            if (patched.All(v => v))
+            label_set = false;
+            if (patched.All(v => v) && label_set)
             {
-                return patch;
+                return transpiled;
             }
             else
             {
-                Log.Warning($"{logPrefix}An error occured while attempting to apply patches, aborting. Click this message for details.\n\n" +
-                    $"Patch 0: {patched[0]}\n" +
-                    $"Patch 1: {patched[1]}\n" +
-                    $"Patch 2: {patched[2]}");
+                patch_status = false;
                 return instructions;
             }
         }
 
-        internal static List<Thing> PrependInventory(List<Thing> things, Pawn pawn)
+        [HarmonyCleanup]
+        private static void Cleanup(HarmonyInstance inst, MethodBase origin)
+        {
+            if (!patch_status)
+            {
+                StringBuilder report = new StringBuilder($"{logPrefix}An error occured while attempting to apply patches, aborting.", 4096).AppendLine()
+                    .AppendLine("If you would like to report this issue, please click this message and copy the information from the window below.")
+                    .AppendLine()
+                    .AppendLine("Status:")
+                    .AppendFormat("    Label set: {0}", label_set).AppendLine()
+                    .AppendFormat("    Patch 0:   {0}", patched[0]).AppendLine()
+                    .AppendFormat("    Patch 1:   {0}", patched[1]).AppendLine()
+                    .AppendFormat("    Patch 2:   {0}", patched[2]).AppendLine()
+                    .AppendLine();
+
+
+                if (inst.GetPatchInfo(origin).Transpilers.Count > 1)
+                {
+                    report.AppendLine("Possible conflicting patches:");
+                    foreach (var p in inst.GetPatchInfo(origin).Transpilers)
+                    {
+                        // Obviously not a conflict, moving on
+                        if (p.owner == inst.Id)
+                            continue;
+
+                        report.AppendFormat("{0}::{1}", p.owner, p.patch.Name).AppendLine();
+                    }
+                    report.AppendLine();
+                }
+                report.AppendLine("(Information from this point on is not needed.)");
+                Log.Error(report.ToString());
+            }
+        }
+
+        private static List<Thing> PrependInventory(List<Thing> things, Pawn pawn)
         {
             var list = pawn.inventory.innerContainer.Where(t => t is Apparel).Concat(things).ToList();
             //TODO:ActivatedEquipment - Remove when finalizing
