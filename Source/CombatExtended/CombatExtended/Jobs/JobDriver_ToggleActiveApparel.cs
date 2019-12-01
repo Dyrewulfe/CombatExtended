@@ -48,7 +48,7 @@ namespace CombatExtended
             // Throw mote
             if (compApparel.ShouldThrowMote && wearer.Map != null)     //holder.Map is temporarily null after game load, skip mote if a pawn was reloading when game was saved
             {
-                // TODO:ActiveApparel - Language key for mote
+                // TODO:ActivatedEquipment - Language key for mote
                 MoteMaker.ThrowText(pawn.Position.ToVector3Shifted(), wearer.Map, string.Format("Readying ", apparel.def.LabelCap));
             }
 
@@ -74,7 +74,7 @@ namespace CombatExtended
 
         public override string GetReport()
         {
-            // TODO:ActiveApparel - implement properly
+            // TODO:ActivatedEquipment - implement properly
             return "Toggling some damn apparel, yo.";
         }
         #endregion
