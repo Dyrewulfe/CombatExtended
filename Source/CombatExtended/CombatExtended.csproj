@@ -155,6 +155,7 @@
     <Compile Include="CombatExtended\Enums\LoadoutCountType.cs" />
     <Compile Include="CombatExtended\ExplosionCE.cs" />
     <Compile Include="CombatExtended\Gizmos\Command_ActivateApparel.cs" />
+    <Compile Include="CombatExtended\Jobs\JobDriver_WearFromInventory.cs" />
     <Compile Include="CombatExtended\Jobs\JobDriver_ToggleActiveApparel.cs" />
     <Compile Include="CombatExtended\Jobs\JobDriver_Hunt.cs" />
     <Compile Include="CombatExtended\Jobs\JobDriver_Stabilize.cs" />
@@ -266,7 +267,6 @@
     <Compile Include="CombatExtended\Verbs\Verb_MarkForArtilleryCE.cs" />
     <Compile Include="CombatExtended\Verbs\Verb_ShootMortarCE.cs" />
     <Compile Include="CombatExtended\Verbs\Verb_ShootCEOneUse.cs" />
-    <Compile Include="Harmony\Harmony-JobDriverWear.cs" />
     <Compile Include="Harmony\Harmony-JobGiver_OptimizeApparel.cs" />
     <Compile Include="Harmony\Harmony-BuildingProperties.cs" />
     <Compile Include="Harmony\Harmony-DamageWorker_AddInjury.cs" />

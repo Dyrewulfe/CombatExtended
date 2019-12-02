@@ -77,12 +77,18 @@
 	<JobDef>
 		<defName>ToggleActiveApparel</defName>
 		<driverClass>CombatExtended.JobDriver_ToggleActiveApparel</driverClass>
-		<reportString>Type TargetB</reportString>
+		<reportString>FlagVerb TargetB.</reportString>
 		<modExtensions>
 			<li Class="CombatExtended.JobDefExtensionCE">
 			  <isCrouchJob>true</isCrouchJob>
 			</li>
 		</modExtensions>
+	</JobDef>
+
+	<JobDef>
+		<defName>WearFromInventory</defName>
+		<driverClass>CombatExtended.JobDriver_WearFromInventory</driverClass>
+		<reportString>Wearing TargetB.</reportString>
 	</JobDef>
 
 </Defs>
