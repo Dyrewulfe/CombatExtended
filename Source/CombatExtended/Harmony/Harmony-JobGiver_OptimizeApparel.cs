@@ -17,9 +17,15 @@ namespace CombatExtended.Harmony
     {
 
         static readonly string logPrefix = Assembly.GetExecutingAssembly().GetName().Name + " :: " + typeof(Harmony_JobGiver_OptimizeApparel).Name + " :: ";
-        static bool patch_status = true;
-        static bool[] patched = new bool[3];
+        static bool success = true;
         static bool label_set = false;
+        static bool[] patched = new bool[3];
+
+        private struct Patch
+        {
+            List<CodeInstruction> codes;
+            
+        }
 
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase origin)
         {
@@ -159,7 +165,7 @@ namespace CombatExtended.Harmony
             }
             else
             {
-                patch_status = false;
+                success = false;
                 return instructions;
             }
         }
@@ -167,7 +173,7 @@ namespace CombatExtended.Harmony
         [HarmonyCleanup]
         private static void Cleanup(HarmonyInstance inst, MethodBase origin)
         {
-            if (!patch_status)
+            if (!success)
             {
                 StringBuilder report = new StringBuilder($"{logPrefix}An error occured while attempting to apply patches, aborting.", 4096).AppendLine()
                     .AppendLine("If you would like to report this issue, please click this message and copy the information from the window below.")
@@ -193,7 +199,7 @@ namespace CombatExtended.Harmony
                     }
                     report.AppendLine();
                 }
-                report.AppendLine("(Information from this point on is not needed.)");
+                report.AppendLine("(-------------------------------- Information from this point on is not needed. --------------------------------)");
                 Log.Error(report.ToString());
             }
         }
