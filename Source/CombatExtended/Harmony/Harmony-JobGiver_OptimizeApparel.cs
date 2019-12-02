@@ -30,7 +30,7 @@ namespace CombatExtended.Harmony
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase origin)
         {
             // For the sake of readable patches
-            ConstructorInfo newJob = AccessTools.Constructor(typeof(Verse.AI.Job), new Type[] { typeof(JobDef), typeof(LocalTargetInfo), typeof(LocalTargetInfo) });
+            ConstructorInfo newJob = AccessTools.Constructor(typeof(Verse.AI.Job), new Type[] { typeof(JobDef), typeof(LocalTargetInfo) });
 
             MethodInfo isInAnyStorage           = AccessTools.Method(typeof(StoreUtility), nameof(StoreUtility.IsInAnyStorage));
             MethodInfo thingsInGroup            = AccessTools.Method(typeof(ListerThings), nameof(ListerThings.ThingsInGroup));
@@ -109,10 +109,8 @@ namespace CombatExtended.Harmony
                 new CodeInstruction(OpCodes.Callvirt, inventory_Contains),
                 // branch to "return new Job(JobDefOf.Wear, thing) on fail, label captured during patching
                 new CodeInstruction(OpCodes.Brfalse, null),
-                // return new Job(CE_JobDefOf.WearFromInventory, pawn, thing);
+                // return new Job(CE_JobDefOf.WearFromInventory, thing);
                 new CodeInstruction(OpCodes.Ldsfld, wearFromInventory),
-                new CodeInstruction(OpCodes.Ldarg_1),
-                new CodeInstruction(OpCodes.Call, castFromThingImplicit),
                 new CodeInstruction(OpCodes.Ldloc, locThingIndex),
                 new CodeInstruction(OpCodes.Call, castFromThingImplicit),
                 new CodeInstruction(OpCodes.Newobj, newJob),
@@ -158,7 +156,6 @@ namespace CombatExtended.Harmony
                 prevCode = code;
             }
 
-            label_set = false;
             if (patched.All(v => v) && label_set)
             {
                 return transpiled;
